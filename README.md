@@ -44,12 +44,16 @@ flutter run
 
 See `.env.example` for all variables and descriptions.
 
+## Auth
+
+Use `POST /auth/guest` to obtain a `{ token }` and send it as `Authorization: Bearer <token>` for all REST calls and Socket.IO auth.
+
 ## Realtime Socket.IO protocol
 
 Namespace: `/realtime`
 
 ### Client → Server
-- `auth { token? , guestId? }`
+- `auth { token }`
 - `room:join { code }`
 - `room:leave {}`
 - `room:ready { ready: true|false }`
@@ -95,4 +99,3 @@ Namespace: `/realtime`
 ## Platform limitations
 
 - **Forbidden apps detection (Level 2)** is only available on Android. iOS is restricted to Level 1 (lifecycle) and optional focus checks.
-

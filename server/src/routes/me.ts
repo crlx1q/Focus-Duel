@@ -1,14 +1,11 @@
 import { Router } from "express";
 import { prisma } from "../db.js";
+import { requireAuth } from "../middleware/auth.js";
 
 export const meRouter = Router();
 
-meRouter.get("/stats", async (req, res) => {
-  const userId = String(req.query.userId ?? "");
-  if (!userId) {
-    res.status(400).json({ error: "userId required" });
-    return;
-  }
+meRouter.get("/stats", requireAuth, async (_req, res) => {
+  const userId = res.locals.userId as string;
   const stats = await prisma.participantSessionStat.findMany({
     where: { userId },
     take: 20,

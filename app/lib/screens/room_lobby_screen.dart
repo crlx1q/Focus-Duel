@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../providers/app_providers.dart';
 import '../widgets/status_pill.dart';
 
-class RoomLobbyScreen extends StatelessWidget {
+class RoomLobbyScreen extends ConsumerWidget {
   const RoomLobbyScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final roomState = ref.watch(roomProvider);
+    final room = roomState.value?.room;
     return Scaffold(
       appBar: AppBar(title: const Text('Room lobby')),
       body: Padding(
@@ -18,10 +22,10 @@ class RoomLobbyScreen extends StatelessWidget {
             const SizedBox(height: 8),
             Row(
               children: [
-                const Expanded(
+                Expanded(
                   child: Text(
-                    'FOCUS12',
-                    style: TextStyle(fontSize: 20, letterSpacing: 2),
+                    room?.code ?? '—',
+                    style: const TextStyle(fontSize: 20, letterSpacing: 2),
                   ),
                 ),
                 IconButton(onPressed: () {}, icon: const Icon(Icons.copy)),
@@ -30,19 +34,26 @@ class RoomLobbyScreen extends StatelessWidget {
             const SizedBox(height: 16),
             const Text('Participants', style: TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
-            const ListTile(
-              leading: CircleAvatar(child: Text('A')),
-              title: Text('Alex (host)'),
-              trailing: StatusPill(label: 'Ready', color: Colors.green),
-            ),
-            const ListTile(
-              leading: CircleAvatar(child: Text('B')),
-              title: Text('Bora'),
-              trailing: StatusPill(label: 'Not ready', color: Colors.grey),
-            ),
+            if (room == null)
+              const Text('No room loaded.'),
+            if (room != null)
+              ...room.participants.map(
+                (participant) => ListTile(
+                  leading: CircleAvatar(child: Text(participant.userId.substring(0, 1).toUpperCase())),
+                  title: Text(participant.role == 'host'
+                      ? '${participant.userId} (host)'
+                      : participant.userId),
+                  trailing: const StatusPill(label: 'Ready', color: Colors.green),
+                ),
+              ),
             const Spacer(),
             FilledButton(
-              onPressed: () => context.go('/running'),
+              onPressed: room == null
+                  ? null
+                  : () {
+                      ref.read(roomProvider.notifier).startRoom();
+                      context.go('/running');
+                    },
               child: const Text('Start sprint'),
             ),
           ],

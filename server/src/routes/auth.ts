@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { nanoid } from "nanoid";
 import { prisma } from "../db.js";
+import { signToken } from "../middleware/auth.js";
 
 export const authRouter = Router();
 
@@ -15,5 +16,6 @@ authRouter.post("/guest", async (_req, res) => {
   res.json({
     userId: user.id,
     guestId,
+    token: signToken({ userId: user.id }),
   });
 });

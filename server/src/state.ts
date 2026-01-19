@@ -5,6 +5,7 @@ export type RoomRuntime = {
   timer: RoomTimerState;
   presence: Map<string, PresenceState>;
   focusCheckAt?: number;
+  sessionId?: string;
 };
 
 const rooms = new Map<string, RoomRuntime>();
@@ -39,6 +40,11 @@ export const roomState = {
       config.focusCheckMinMinute +
       Math.floor(Math.random() * (config.focusCheckMaxMinute - config.focusCheckMinMinute + 1));
     runtime.focusCheckAt = startedAt + focusCheckMinute * 60 * 1000;
+  },
+  setSession(roomId: string, sessionId: string) {
+    const runtime = rooms.get(roomId);
+    if (!runtime) return;
+    runtime.sessionId = sessionId;
   },
   setFinished(roomId: string) {
     const runtime = rooms.get(roomId);

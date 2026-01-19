@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-class HomeScreen extends StatelessWidget {
+import '../providers/app_providers.dart';
+
+class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final authState = ref.watch(authProvider);
     return Scaffold(
       appBar: AppBar(
         title: const Text('Focus Duel'),
@@ -25,6 +29,11 @@ class HomeScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Text(
+              authState.value != null ? 'Guest: ${authState.value!.userId}' : 'Not signed in',
+              style: const TextStyle(color: Colors.grey),
+            ),
+            const SizedBox(height: 12),
             const Text(
               'Quick start',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),

@@ -1,11 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-class OnboardingScreen extends StatelessWidget {
+import '../providers/app_providers.dart';
+
+class OnboardingScreen extends ConsumerWidget {
   const OnboardingScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    ref.listen(authProvider, (previous, next) {
+      if (next.value != null) {
+        context.go('/home');
+      }
+    });
+    final authState = ref.watch(authProvider);
     return Scaffold(
       body: SafeArea(
         child: Padding(
@@ -26,8 +35,16 @@ class OnboardingScreen extends StatelessWidget {
               ),
               const SizedBox(height: 24),
               FilledButton(
-                onPressed: () => context.go('/home'),
-                child: const Text('Continue as guest'),
+                onPressed: authState.isLoading
+                    ? null
+                    : () => ref.read(authProvider.notifier).signInGuest(),
+                child: authState.isLoading
+                    ? const SizedBox(
+                        height: 18,
+                        width: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Text('Continue as guest'),
               ),
               TextButton(
                 onPressed: () => context.go('/home'),

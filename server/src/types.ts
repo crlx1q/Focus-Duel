@@ -29,4 +29,5 @@ export type PresenceState = {
   trustScore: number;
   lastSlipAt?: number;
   afkStartedAt?: number;
+  serverTimeOffset?: number;
 };

@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models.dart';
 import '../services/api_client.dart';
 import '../services/socket_service.dart';
+import '../services/secure_storage.dart';
 
 final apiClientProvider = Provider<ApiClient>((ref) {
   return ApiClient(baseUrl: 'http://localhost:4000');
@@ -16,15 +17,29 @@ final socketServiceProvider = Provider<SocketService>((ref) {
   return service;
 });
 
+final secureStorageProvider = Provider<SecureStorage>((ref) {
+  return SecureStorage();
+});
+
 class AuthController extends StateNotifier<AsyncValue<AuthSession?>> {
-  AuthController(this._apiClient) : super(const AsyncValue.data(null));
+  AuthController(this._apiClient, this._storage) : super(const AsyncValue.data(null)) {
+    _hydrate();
+  }
 
   final ApiClient _apiClient;
+  final SecureStorage _storage;
+
+  Future<void> _hydrate() async {
+    final session = await _storage.readSession();
+    if (session == null) return;
+    state = AsyncValue.data(AuthSession(userId: session['userId']!, token: session['token']!));
+  }
 
   Future<void> signInGuest() async {
     state = const AsyncValue.loading();
     try {
       final session = await _apiClient.createGuest();
+      await _storage.saveSession(token: session.token, userId: session.userId);
       state = AsyncValue.data(session);
     } catch (error, stack) {
       state = AsyncValue.error(error, stack);
@@ -33,7 +48,7 @@ class AuthController extends StateNotifier<AsyncValue<AuthSession?>> {
 }
 
 final authProvider = StateNotifierProvider<AuthController, AsyncValue<AuthSession?>>((ref) {
-  return AuthController(ref.watch(apiClientProvider));
+  return AuthController(ref.watch(apiClientProvider), ref.watch(secureStorageProvider));
 });
 
 class RoomController extends StateNotifier<AsyncValue<RoomState?>> {

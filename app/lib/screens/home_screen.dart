@@ -10,6 +10,17 @@ class HomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authProvider);
+    if (authState.value == null) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Focus Duel')),
+        body: Center(
+          child: FilledButton(
+            onPressed: () => context.go('/onboarding'),
+            child: const Text('Sign in to continue'),
+          ),
+        ),
+      );
+    }
     return Scaffold(
       appBar: AppBar(
         title: const Text('Focus Duel'),
@@ -30,7 +41,7 @@ class HomeScreen extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              authState.value != null ? 'Guest: ${authState.value!.userId}' : 'Not signed in',
+              'Guest: ${authState.value!.userId}',
               style: const TextStyle(color: Colors.grey),
             ),
             const SizedBox(height: 12),

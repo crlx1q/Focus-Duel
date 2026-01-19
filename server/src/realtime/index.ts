@@ -7,6 +7,7 @@ import { computeStats } from "../services/metrics.js";
 import { applySlip } from "../services/slip.js";
 import { roomState, heartbeatMonitor } from "../state.js";
 import { EventType, ParticipantStatus } from "../types.js";
+import { logInfo } from "../logger.js";
 
 const ROOM_NAMESPACE = "/realtime";
 
@@ -114,15 +115,18 @@ export const setupRealtime = (io: Server) => {
       if (!parsed.success) return;
       if (!currentUserId) return;
       await ensureParticipant(parsed.data.roomId, currentUserId);
+      const now = Date.now();
+      const offset = now - parsed.data.tClient;
       roomState.updatePresence(parsed.data.roomId, currentUserId, (state) => ({
         ...state,
-        lastSeen: Date.now(),
+        lastSeen: now,
+        serverTimeOffset: offset,
         status: state.status === "AFK" ? "FOCUS" : state.status,
       }));
       nsp.to(parsed.data.roomId).emit("room:state", {
         roomId: parsed.data.roomId,
         statuses: Array.from(roomState.get(parsed.data.roomId)?.presence ?? []),
-        tServer: Date.now(),
+        tServer: now,
       });
     });
 
@@ -202,6 +206,7 @@ export const setupRealtime = (io: Server) => {
       roomState.setSession(room.id, session.id);
       roomState.setStarted(room.id, Date.now());
       await logEvent(session.id, currentUserId, "START");
+      logInfo("room_started", { roomId: room.id, userId: currentUserId });
       nsp.to(room.id).emit("room:event", {
         type: "START" as EventType,
         userId: currentUserId,
@@ -228,8 +233,11 @@ export const setupRealtime = (io: Server) => {
     const now = Date.now();
     const rooms = await prisma.room.findMany({ where: { status: "RUNNING" } });
     for (const room of rooms) {
-      const runtime = roomState.get(room.id);
-      if (!runtime?.timer.startedAt) continue;
+      const runtime = roomState.get(room.id) ?? roomState.ensureRoom(room.id, room.durationSec);
+      if (!runtime.timer.startedAt && room.startedAt) {
+        runtime.timer.startedAt = room.startedAt.getTime();
+      }
+      if (!runtime.timer.startedAt) continue;
       const elapsedSec = Math.floor((now - runtime.timer.startedAt) / 1000);
       const remainingSec = Math.max(0, room.durationSec - elapsedSec);
       nsp.to(room.id).emit("room:timer", { remainingSec, tServer: now });

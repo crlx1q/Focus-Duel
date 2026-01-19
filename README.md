@@ -48,6 +48,8 @@ See `.env.example` for all variables and descriptions.
 
 Use `POST /auth/guest` to obtain a `{ token }` and send it as `Authorization: Bearer <token>` for all REST calls and Socket.IO auth.
 
+> Production note: set `ALLOWED_ORIGINS` to your deployed domains. If empty, CORS will allow all origins.
+
 ## Realtime Socket.IO protocol
 
 Namespace: `/realtime`
@@ -99,3 +101,4 @@ Namespace: `/realtime`
 ## Platform limitations
 
 - **Forbidden apps detection (Level 2)** is only available on Android. iOS is restricted to Level 1 (lifecycle) and optional focus checks.
+- **Room runtime state** is in-memory for now. For production, back it with Redis for multi-node + restart safety.

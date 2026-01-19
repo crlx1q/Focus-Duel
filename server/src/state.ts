@@ -34,8 +34,8 @@ export const roomState = {
   setStarted(roomId: string, startedAt: number) {
     const runtime = rooms.get(roomId);
     if (!runtime) return;
-    runtime.timer.startedAt = startedAt;
-    runtime.timer.status = "RUNNING";
+      runtime.timer.startedAt = startedAt;
+      runtime.timer.status = "RUNNING";
     const focusCheckMinute =
       config.focusCheckMinMinute +
       Math.floor(Math.random() * (config.focusCheckMaxMinute - config.focusCheckMinMinute + 1));

@@ -78,7 +78,7 @@ class SocketService {
         slips: state['slips'] as int? ?? 0,
       );
     }).toList();
-    final remainingSec = (data['timer']?['durationSec'] as int?) ?? 0;
+    final remainingSec = (data['timer']?['durationSec'] as int?) ?? room['durationSec'] as int;
     _stateController.add(RoomState(
       room: RoomSummary(
         id: room['id'] as String,

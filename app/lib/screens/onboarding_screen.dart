@@ -34,6 +34,12 @@ class OnboardingScreen extends ConsumerWidget {
                 'Duel or cowork in timed sprints. Only status shows: Focus, Slip, or AFK.',
               ),
               const SizedBox(height: 24),
+              if (authState.hasError)
+                Text(
+                  'Failed to sign in. Please try again.',
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                ),
+              if (authState.hasError) const SizedBox(height: 12),
               FilledButton(
                 onPressed: authState.isLoading
                     ? null

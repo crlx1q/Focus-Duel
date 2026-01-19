@@ -10,6 +10,7 @@ import { notificationsRouter } from "./routes/notifications.js";
 import { setupRealtime } from "./realtime/index.js";
 import { errorHandler } from "./middleware/error.js";
 import { rateLimit } from "./middleware/rate_limit.js";
+import { logInfo } from "./logger.js";
 
 const app = express();
 app.use(
@@ -19,6 +20,10 @@ app.use(
 );
 app.use(express.json());
 app.use(rateLimit("http", 120));
+app.use((req, _res, next) => {
+  logInfo("http_request", { method: req.method, path: req.path });
+  next();
+});
 
 app.get("/health", (_req, res) => {
   res.json({ ok: true });
@@ -40,11 +45,11 @@ const io = new Server(server, {
 setupRealtime(io);
 
 server.listen(config.port, () => {
-  console.log(`Focus Duel server listening on :${config.port}`);
+  logInfo("server_listening", { port: config.port });
 });
 
 const shutdown = async () => {
-  console.log("Shutting down...");
+  logInfo("server_shutdown");
   await io.close();
   await new Promise((resolve) => server.close(resolve));
   process.exit(0);

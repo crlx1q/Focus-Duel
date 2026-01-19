@@ -91,6 +91,12 @@ class _CreateRoomScreenState extends ConsumerState<CreateRoomScreen> {
             subtitle: const Text('Invite-only via code/link'),
           ),
           const SizedBox(height: 12),
+          if (roomState.hasError)
+            Text(
+              'Failed to create room. Please retry.',
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
+          if (roomState.hasError) const SizedBox(height: 8),
           FilledButton(
             onPressed: roomState.isLoading
                 ? null

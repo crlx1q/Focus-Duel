@@ -1,0 +1,110 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum RoomMode {
+  DUEL
+  COWORK
+}
+
+enum RoomStatus {
+  WAITING
+  RUNNING
+  FINISHED
+  CANCELLED
+}
+
+enum EventType {
+  START
+  SLIP
+  AFK
+  BACK
+  FINISH
+  JOIN
+  LEAVE
+  CHECK_PROMPT
+  CHECK_MISSED
+}
+
+model User {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+  name        String?
+  authProvider String  @default("guest")
+  guestId     String?  @unique
+  email       String?  @unique
+  roomsHosted Room[]   @relation("HostedRooms")
+  participants RoomParticipant[]
+  stats       ParticipantSessionStat[]
+  events      Event[]
+}
+
+model Room {
+  id                 String   @id @default(cuid())
+  code               String   @unique
+  mode               RoomMode
+  durationSec        Int
+  strictnessLevel    Int
+  focusCheckEnabled  Boolean
+  isPrivate          Boolean
+  hostId             String
+  status             RoomStatus @default(WAITING)
+  createdAt          DateTime @default(now())
+  startedAt          DateTime?
+  finishedAt         DateTime?
+  host               User     @relation("HostedRooms", fields: [hostId], references: [id])
+  participants       RoomParticipant[]
+  sessions           Session[]
+}
+
+model RoomParticipant {
+  id        String   @id @default(cuid())
+  roomId    String
+  userId    String
+  role      String
+  joinedAt  DateTime @default(now())
+  leftAt    DateTime?
+  room      Room     @relation(fields: [roomId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model Session {
+  id              String   @id @default(cuid())
+  roomId          String
+  startedAt       DateTime
+  finishedAt      DateTime?
+  serverTimeOffset Int
+  finalState      String
+  room            Room     @relation(fields: [roomId], references: [id])
+  stats           ParticipantSessionStat[]
+  events          Event[]
+}
+
+model ParticipantSessionStat {
+  id            String   @id @default(cuid())
+  sessionId     String
+  userId        String
+  focusTimeSec  Int
+  slips         Int
+  afkTimeSec    Int
+  trustScore    Int
+  session       Session  @relation(fields: [sessionId], references: [id])
+  user          User     @relation(fields: [userId], references: [id])
+}
+
+model Event {
+  id         String   @id @default(cuid())
+  sessionId  String
+  userId     String
+  type       EventType
+  reason     String?
+  payloadJson Json?
+  createdAt  DateTime @default(now())
+  session    Session  @relation(fields: [sessionId], references: [id])
+  user       User     @relation(fields: [userId], references: [id])
+}
